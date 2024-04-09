@@ -98,42 +98,48 @@ def fetch_netCDF_details(request, filename):
         return JsonResponse({'error': error_message}, status=500) 
     
 def variable_data_view(request, filename, variable):
-    # Get the time index from the request, defaulting to 0 if not provided
+    # Original code to get time and level indices
     time_index = request.GET.get('time', 0)
-    time_index = int(time_index)  # Ensure the time_index is an integer
-
+    level_index = request.GET.get('level', 0)
+    time_index = int(time_index)
+    level_index = int(level_index)
     filepath = os.path.join(settings.DATA_DIR, filename)
 
     try:
         dataset = netCDF4.Dataset(filepath, 'r')
-
-        # Fetch the latitude and longitude data
         latitudes = dataset.variables['latitude'][:]
         longitudes = dataset.variables['longitude'][:]
         var_data = dataset.variables[variable]
 
-        # Adjust to use the provided time_index for slicing the data
-        if 'time' in var_data.dimensions and 'level' in var_data.dimensions:
-            var_data = var_data[time_index, 0, :, :]  # Use selected time slice, first level
-        elif 'time' in var_data.dimensions:
-            var_data = var_data[time_index, :, :]  # Use selected time slice
-        elif 'level' in var_data.dimensions:
-            var_data = var_data[0, :, :]  # Use the first level if 'level' dimension is present but not 'time'
+        # Fetch the actual time and level values
+        time_units = dataset.variables['time'].units
+        time_value = dataset.variables['time'][time_index]
+        actual_time = netCDF4.num2date(time_value, units=time_units)
 
-        # Convert the data to a list of dictionaries with lat, lon, and value
+        level_value = dataset.variables['level'][level_index] if 'level' in dataset.variables else None
+
+        # Adjust to use the provided time_index and level_index for slicing the data
+        if 'time' in var_data.dimensions and 'level' in var_data.dimensions:
+            var_data = var_data[time_index, level_index, :, :]
+        elif 'time' in var_data.dimensions:
+            var_data = var_data[time_index, :, :]
+        elif 'level' in var_data.dimensions:
+            var_data = var_data[level_index, :, :]
+
         data = []
         for i, lat in enumerate(latitudes):
             for j, lon in enumerate(longitudes):
                 data_point = {
                     "latitude": float(lat),
                     "longitude": float(lon),
-                    "value": float(var_data[i, j])
+                    "value": float(var_data[i, j]) if not np.isnan(var_data[i, j]) else None,
+                    "time": actual_time.strftime('%Y-%m-%d %H:%M:%S'),
+                    "level": float(level_value) if level_value is not None else None
                 }
                 data.append(data_point)
 
         dataset.close()
-        return JsonResponse(data, safe=False)  # 'safe=False' is required for non-dict objects
+        return JsonResponse(data, safe=False)
 
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
-

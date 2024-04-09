@@ -79,17 +79,17 @@
                         <!-- D3 Visualization Container -->
                         <div id="d3-container">
                             <div id="time-slider-container">
-                                <label for="time-slider">Time:</label>
+                                <label for="time-slider" style="font-weight: bold;">Time:</label>
                                 <input type="range" id="time-slider" min="0" max="100" value="0" step="1">
-                                <span id="slider-value">0</span>
+                                <span id="slider-value" style="font-weight: bold;">0</span>
                             </div>
                             <div id="level-slider-container">
                                 <input type="range" id="level-slider" min="0" max="10" value="0" step="1">
                             </div>
                             <!-- Level Value Container -->
                             <div id="level-value-container">
-                                <label for="level-slider">Level:</label>
-                                <span id="level-value">0</span>
+                                <label for="level-slider" style="font-weight: bold;">Level:</label>
+                                <span id="level-value" style="font-weight: bold;">0</span>
                             </div>
                         </div>
                         
@@ -172,45 +172,56 @@
                 timeout = setTimeout(later, wait);
             };
         }
+
+        // Debounced version of updateVisualization
+        const debouncedUpdateVisualization = debounce(updateVisualization, 100); // 100ms delay
+
+        // Event listeners for variable selection and time slider
+        document.getElementById('variable-select').addEventListener('change', updateVisualization);
+        document.getElementById('time-slider').addEventListener('input', debouncedUpdateVisualization);
+        document.getElementById('level-slider').addEventListener('input', debouncedUpdateVisualization);
     
         function updateVisualization() {
             var selectedVariable = document.getElementById('variable-select').value;
             var selectedFile = document.getElementById('selected-filename').getAttribute('data-filename');
             var selectedTime = document.getElementById('time-slider').value;
-    
-            fetch(`/wx_viewer/variable_data/${selectedFile}/${selectedVariable}/?time=${selectedTime}`)
+            var selectedLevel = document.getElementById('level-slider').value; // Get the level value
+
+            fetch(`/wx_viewer/variable_data/${selectedFile}/${selectedVariable}/?time=${selectedTime}&level=${selectedLevel}`)
                 .then(response => response.json())
                 .then(data => {
                     // Clear previous data points
                     d3.selectAll("circle").remove();
-    
+            
                     // Define color scale based on min and max values
                     const values = data.map(d => d.value);
                     const minValue = d3.min(values);
                     const maxValue = d3.max(values);
                     colorScale = d3.scaleSequential(d3.interpolateViridis)
                         .domain([minValue, maxValue]);
-    
+            
                     // Add new data points as circles
                     g.selectAll('circle')
                         .data(data)
                         .enter().append('circle')
                         .attr('cx', d => projection([d.longitude, d.latitude])[0])
                         .attr('cy', d => projection([d.longitude, d.latitude])[1])
-                        .attr('r', 0.1) // Radius of the circle, you can adjust this as needed
+                        .attr('r', 0.1) // Radius of the circle
                         .attr('fill', d => colorScale(d.value)) // Apply color based on the value
                         .attr('opacity', 0.9);
+
+                    // Update the time and level values
+                    const firstDataPoint = data[0]; // Get the first data point
+                    document.getElementById('slider-value').textContent = firstDataPoint.time;
+
+                    // Convert level from meters to feet
+                    const levelInFeet = Math.round(firstDataPoint.level * 3.28084); // Convert to feet and round to 2 decimal places
+                    document.getElementById('level-value').textContent = `${levelInFeet} ft`; // Set the level in feet
+
                 })
                 .catch(error => console.error('Error fetching variable data:', error));
         }
     
-        // Debounced version of updateVisualization
-        const debouncedUpdateVisualization = debounce(updateVisualization, 100); // 200ms delay
-
-        // Event listeners for variable selection and time slider
-        document.getElementById('variable-select').addEventListener('change', updateVisualization);
-        document.getElementById('time-slider').addEventListener('input', debouncedUpdateVisualization);
-
         // Initialize D3 visualization
         var projection = d3.geoMercator().scale(200).translate([300, 200]);
         var pathGenerator = d3.geoPath().projection(projection);
@@ -228,12 +239,17 @@
                 .attr('d', pathGenerator)
                 .attr('stroke', '#353538') // Set the stroke color for the coastline
                 .attr('fill', 'none')  // No fill for just the coastlines
-                .attr('stroke-width', '0.1px'); // Adjust the stroke-width to make the line thinner
         });
 
         // Zoom event handler
         function zoomed(event) {
+            // Apply the zoom transform to the group 'g'
             g.attr('transform', event.transform);
+
+            // Adjust stroke width based on the zoom level
+            // As you zoom in (k increases), the stroke width becomes thinner
+            g.selectAll('.coastline')
+            .attr('stroke-width', 1 / event.transform.k + 'px'); // Adjust 1 to your base stroke-width
         }
     </script>
     
