@@ -41,38 +41,43 @@ main {
 }
 
 #time-slider-container {
-    margin: 20px 0;
+    position: relative; 
+    top: -30px; 
+    left: 0; 
+    width: 100%; 
+    height: 5%; 
+    display: flex;
+    flex-direction: column;
 }
 
 #level-slider-container {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    float: left; /* Float the container to the left */
-}
-
-#level-slider-wrapper {
-    width: 20px;
     position: relative;
+    top: 660px; /* Adjust this to position the slider below the "Select a Variable" dropdown */
+    left: -35px; /* Align with the left edge of the D3 container */
+    width: 700px; 
+    transform: rotate(-90deg);
+    transform-origin: top left; /* Rotate the slider to be vertical */
 }
 
 #level-slider {
-    transform: rotate(-90deg);
-    -webkit-transform: rotate(-90deg);
-    width: 100%;
-    margin-top: 10px;
+    width: 90%; /* Since the container is rotated, this will be the height of the slider */
 }
 
 #level-value-container {
-    margin-top: 10px;
-    text-align: center;
-    font-size: 14px;
+    position: absolute;
+    top: calc(900px); /* Adjust so it sits below the slider */
+    left: 30px; /* Adjust to align it horizontally with the slider */
+    white-space: nowrap; /* Ensure the label and value are on the same line */
+}
+
+#level-value {
+    /* Add any specific styles you need for the level value here */
 }
 
 #d3-container {
-    width: calc(100% - 200px);
-    height: 800px;
-    border: 1px solid red;
-    float: right;
+    width: 1000px; 
+    height: 800px; 
+    border: 1px solid #353538;
+    margin: 0px;
+    padding: 50px;
 }

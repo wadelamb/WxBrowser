@@ -98,23 +98,27 @@ def fetch_netCDF_details(request, filename):
         return JsonResponse({'error': error_message}, status=500) 
     
 def variable_data_view(request, filename, variable):
+    # Get the time index from the request, defaulting to 0 if not provided
+    time_index = request.GET.get('time', 0)
+    time_index = int(time_index)  # Ensure the time_index is an integer
+
     filepath = os.path.join(settings.DATA_DIR, filename)
 
     try:
         dataset = netCDF4.Dataset(filepath, 'r')
 
-        # Fetch the latitude, longitude, and variable data
+        # Fetch the latitude and longitude data
         latitudes = dataset.variables['latitude'][:]
         longitudes = dataset.variables['longitude'][:]
         var_data = dataset.variables[variable]
 
-        # For simplicity, let's use the first time slice and level if they are dimensions of the variable
+        # Adjust to use the provided time_index for slicing the data
         if 'time' in var_data.dimensions and 'level' in var_data.dimensions:
-            var_data = var_data[0, 0, :, :]  # First time slice and level
+            var_data = var_data[time_index, 0, :, :]  # Use selected time slice, first level
         elif 'time' in var_data.dimensions:
-            var_data = var_data[0, :, :]  # First time slice
+            var_data = var_data[time_index, :, :]  # Use selected time slice
         elif 'level' in var_data.dimensions:
-            var_data = var_data[0, :, :]  # First level
+            var_data = var_data[0, :, :]  # Use the first level if 'level' dimension is present but not 'time'
 
         # Convert the data to a list of dictionaries with lat, lon, and value
         data = []
@@ -132,3 +136,4 @@ def variable_data_view(request, filename, variable):
 
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
+
