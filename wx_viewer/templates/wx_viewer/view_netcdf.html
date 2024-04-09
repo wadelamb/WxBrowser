@@ -2,20 +2,42 @@
 <html>
 <head>
     <title>{{ filename }}</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #dddddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
 </head>
 <body>
     <h5 id="selected-filename" data-filename="{{ filename }}">{{ filename }}</h5>
-    {% for name, details in variable_details.items %}
-        <h6>{{ name }}</h6>
-        <p>Dimensions: {{ details.dimensions|join:", " }}</p>
-        <h7>Attributes</h7>
-        <ul>
-            {% for attr_name, attr_value in details.attributes.items %}
-                <li>{{ attr_name }}: {{ attr_value }}</li>
-            {% endfor %}
-        </ul>
-    {% endfor %}
-
+    <table>
+        <tr>
+            <th>Variable</th>
+            <th>Dimensions</th>
+            <th>Attributes</th>
+        </tr>
+        {% for name, details in variable_details.items %}
+        <tr>
+            <td>{{ name }}</td>
+            <td>{{ details.dimensions|join:", " }}</td>
+            <td>
+                <ul>
+                    {% for attr_name, attr_value in details.attributes.items %}
+                        <li>{{ attr_name }}: {{ attr_value }}</li>
+                    {% endfor %}
+                </ul>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
 </body>
 </html>
-

@@ -135,8 +135,12 @@
         }
     
         function extractVariableNames(container) {
-            const variableElements = container.querySelectorAll('h6');
-            const variableNames = Array.from(variableElements).map(elem => elem.textContent.trim()).filter(name => name !== 'Variables' && name !== 'Attributes');
+            // Assuming the first row contains headers and subsequent rows contain data
+            const variableRows = container.querySelectorAll('table tr:not(:first-child)');
+            const variableNames = Array.from(variableRows).map(row => {
+                // Assuming the first cell in each row contains the variable name
+                return row.cells[0].textContent.trim();
+            });
             return variableNames;
         }
     
