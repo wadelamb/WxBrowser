@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
+    <meta name="generator" content="Jekyll v3.8.5">
+    <title>Wx Viewer Dashboard</title>
+
+    <link rel="canonical" href="https://getbootstrap.com/docs/4.3/examples/dashboard/">
+
+    {% load static %}
+    <!-- Bootstrap core CSS -->
+    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="{% static 'css/dashboard.css' %}" rel="stylesheet">
+    <style type="text/css">/* Chart.js */
+    @-webkit-keyframes chartjs-render-animation{from{opacity:0.99}to{opacity:1}}@keyframes chartjs-render-animation{from{opacity:0.99}to{opacity:1}}.chartjs-render-monitor{-webkit-animation:chartjs-render-animation 0.001s;animation:chartjs-render-animation 0.001s;}</style>
+    {% load static %}
+</head>
+<body data-new-gr-c-s-check-loaded="14.1062.0" data-gr-ext-installed="">
+    <nav class="navbar navbar-dark fixed-top bg-dark flex-md-nowrap p-0 shadow">
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav class="col-md-2 d-none d-md-block sidebar"> <!-- Remove bg-light class -->
+                <div class="sidebar-sticky">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <h6 class="sidebar-heading d-flex justify-content-between align-items-center">
+                                Data Files
+                            </h6>
+                            <ul class="nav flex-column mb-2">
+                                {% for file in netcdf_files %}
+                                <li class="nav-item">
+                                    <!-- Update the href to "#" and add an onclick event handler -->
+                                    <a class="nav-link" href="#" onclick="fetchNetCDFDetails('{{ file }}'); return false;">{{ file }}</a>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- Main content -->
+            <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-4">
+                <div class="chartjs-size-monitor" style="position: absolute; inset: 0px; overflow: hidden; pointer-events: none; visibility: hidden; z-index: -1;">
+                    <div class="chartjs-size-monitor-expand" style="position:absolute;left:0;top:0;right:0;bottom:0;overflow:hidden;pointer-events:none;visibility:hidden;z-index:-1;">
+                        <div style="position:absolute;width:1000000px;height:1000000px;left:0;top:0"></div>
+                    </div>
+                    <div class="chartjs-size-monitor-shrink" style="position:absolute;left:0;top:0;right:0;bottom:0;overflow:hidden;pointer-events:none;visibility:hidden;z-index:-1;">
+                        <div style="position:absolute;width:200%;height:200%;left:0; top:0"></div>
+                    </div>
+                </div>
+                
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">Wx Viewer</h1>
+                    <!-- D3 Visualization Container -->
+                    <div id="d3-container"></div>
+
+                </div>
+                <div>
+                    <label for="variable-select">Select a Variable:</label>
+                    <select id="variable-select">
+                        {% for variable in variables %}
+                            <option value="{{ variable }}">{{ variable }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <canvas class="my-4 w-100 chartjs-render-monitor" id="myChart" width="1037" height="437" style="display: block; width: 1037px; height: 437px;"></canvas>
+
+                <h4>Data</h4>
+                <div class="netCDF_detail">
+                    <!-- Table content here -->
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Local script references -->
+    <script src="{% static 'js/jquery-3.3.1.min.js' %}"></script>
+    <script src="{% static 'js/feather.min.js' %}"></script>
+    <script src="{% static 'js/Chart.min.js' %}"></script>
+    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+
+    <script>
+        function fetchNetCDFDetails(filename) {
+            fetch(`/data/${filename}/`)
+            .then(response => response.text())  // Continue getting the response as text
+            .then(html => {
+                // Update the .netCDF_detail element's innerHTML with the response
+                const detailsContainer = document.querySelector('.netCDF_detail');
+                detailsContainer.innerHTML = html;
+    
+                // Extract variable names from the updated .netCDF_detail content
+                const variableNames = extractVariableNames(detailsContainer);
+    
+                // Update the variables dropdown with the extracted variable names
+                updateVariableDropdown(variableNames);
+            })
+            .catch(error => {
+                console.error('Error fetching netCDF details:', error);
+                document.querySelector('.netCDF_detail').innerHTML = '<p>An error occurred while fetching file details.</p>';
+            });
+        }
+    
+        function extractVariableNames(container) {
+            // Select all <h6> elements within the container, which contain variable names
+            const variableElements = container.querySelectorAll('h6');
+            // Convert NodeList to Array and map to get textContent, then filter out the "Variables" heading and empty names
+            const variableNames = Array.from(variableElements).map(elem => elem.textContent.trim()).filter(name => name !== 'Variables' && name !== 'Attributes');
+    
+            return variableNames;
+        }
+    
+        function updateVariableDropdown(variables) {
+            const variableSelect = document.getElementById('variable-select');
+            variableSelect.innerHTML = '';  // Clear existing options
+    
+            // Populate dropdown with new options
+            variables.forEach(variable => {
+                const option = document.createElement('option');
+                option.value = variable;
+                option.textContent = variable;
+                variableSelect.appendChild(option);
+            });
+        }
+    </script>
+    
+    
+
+    <script>
+        // JavaScript to handle variable selection changes
+        document.getElementById('variable-select').addEventListener('change', function() {
+            var selectedVariable = this.value;
+            console.log('Selected variable:', selectedVariable);
+            // You can extend this script to fetch and display data
+            // based on the selected variable.
+        });
+    </script>
+    
+</body>
+</html>

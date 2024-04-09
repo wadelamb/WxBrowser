@@ -1,0 +1,41 @@
+/* Import Bootstrap CSS */
+@import url('/static/css/bootstrap.min.css');
+
+/* Custom styles for dashboard */
+
+body {
+    padding-top: 56px; /* Adjust based on your navbar height */
+    color: #353538; /* Set background color */
+}
+
+.sidebar {
+    position: fixed;
+    top: 56px; /* Adjust based on your navbar height */
+    bottom: 0;
+    left: 0;
+    z-index: 100; /* Ensure sidebar appears above main content */
+    padding: 20px;
+    overflow-y: auto;
+    border-right: 1px solid #353538;
+    background-color: #353538; /* Set background color */
+}
+
+.sidebar a {
+    color: white; /* Set link color to white */
+}
+
+.sidebar h6 {
+    color: white; /* Set heading color to white */
+}
+
+main {
+    margin-left: 220px; /* Adjust based on your sidebar width */
+    padding: 20px;
+    color: #353538; /* Set background color */
+}
+
+/* Hover effect for links */
+.sidebar a:hover {
+    text-decoration: none; /* Remove underline on hover */
+    color: lightgray; /* Change link color on hover */
+}

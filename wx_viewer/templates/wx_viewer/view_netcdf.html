@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ filename }}</title>
+</head>
+<body>
+    <h5>{{ filename }}</h5>
+
+    <h6>Variables</h6>
+    {% for name, details in variable_details.items %}
+        <h6>{{ name }}</h6>
+        <p>Type: {{ details.data_type }}</p>
+        <p>Dimensions: {{ details.dimensions|join:", " }}</p>
+        <h6>Attributes</h6>
+        <ul>
+            {% for attr_name, attr_value in details.attributes.items %}
+                <li>{{ attr_name }}: {{ attr_value }}</li>
+            {% endfor %}
+        </ul>
+    {% endfor %}
+
+</body>
+</html>

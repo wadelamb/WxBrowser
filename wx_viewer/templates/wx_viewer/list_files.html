@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>NetCDF Files</title>
+</head>
+<body>
+    <h1>NetCDF Files</h1>
+    <ul>
+        {% for file in netcdf_files %}
+            <li><a href="{% url 'view_netcdf' file %}">{{ file }}</a></li>
+        {% empty %}
+            <li>No files found.</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
