@@ -39,3 +39,40 @@ main {
     text-decoration: none; /* Remove underline on hover */
     color: lightgray; /* Change link color on hover */
 }
+
+#time-slider-container {
+    margin: 20px 0;
+}
+
+#level-slider-container {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    float: left; /* Float the container to the left */
+}
+
+#level-slider-wrapper {
+    width: 20px;
+    position: relative;
+}
+
+#level-slider {
+    transform: rotate(-90deg);
+    -webkit-transform: rotate(-90deg);
+    width: 100%;
+    margin-top: 10px;
+}
+
+#level-value-container {
+    margin-top: 10px;
+    text-align: center;
+    font-size: 14px;
+}
+
+#d3-container {
+    width: calc(100% - 200px);
+    height: 800px;
+    border: 1px solid red;
+    float: right;
+}

@@ -5,6 +5,7 @@ from django.shortcuts import render
 import netCDF4
 from django.conf import settings
 from django.http import JsonResponse
+import numpy as np
 from .utils import convert_to_json
 
 def list_netcdf_files(request):
@@ -95,3 +96,39 @@ def fetch_netCDF_details(request, filename):
         # In case of an error, return an error message
         error_message = str(e)
         return JsonResponse({'error': error_message}, status=500) 
+    
+def variable_data_view(request, filename, variable):
+    filepath = os.path.join(settings.DATA_DIR, filename)
+
+    try:
+        dataset = netCDF4.Dataset(filepath, 'r')
+
+        # Fetch the latitude, longitude, and variable data
+        latitudes = dataset.variables['latitude'][:]
+        longitudes = dataset.variables['longitude'][:]
+        var_data = dataset.variables[variable]
+
+        # For simplicity, let's use the first time slice and level if they are dimensions of the variable
+        if 'time' in var_data.dimensions and 'level' in var_data.dimensions:
+            var_data = var_data[0, 0, :, :]  # First time slice and level
+        elif 'time' in var_data.dimensions:
+            var_data = var_data[0, :, :]  # First time slice
+        elif 'level' in var_data.dimensions:
+            var_data = var_data[0, :, :]  # First level
+
+        # Convert the data to a list of dictionaries with lat, lon, and value
+        data = []
+        for i, lat in enumerate(latitudes):
+            for j, lon in enumerate(longitudes):
+                data_point = {
+                    "latitude": float(lat),
+                    "longitude": float(lon),
+                    "value": float(var_data[i, j])
+                }
+                data.append(data_point)
+
+        dataset.close()
+        return JsonResponse(data, safe=False)  # 'safe=False' is required for non-dict objects
+
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)

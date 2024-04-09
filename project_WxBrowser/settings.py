@@ -1,3 +1,4 @@
+# WxBrowser\project_WxBroswer\settings.py
 """
 Django settings for project_WxBrowser.
 

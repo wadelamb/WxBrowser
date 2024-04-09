@@ -1,3 +1,5 @@
+# WxBrowser\project_WxBroswer\urls.py
+
 """
 ASGI config for project_WxBrowser.
 
@@ -14,3 +16,4 @@ from django.core.asgi import get_asgi_application
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'project_WxBrowser.settings')
 
 application = get_asgi_application()
+

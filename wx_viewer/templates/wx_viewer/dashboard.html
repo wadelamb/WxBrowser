@@ -18,7 +18,6 @@
     <link href="{% static 'css/dashboard.css' %}" rel="stylesheet">
     <style type="text/css">/* Chart.js */
     @-webkit-keyframes chartjs-render-animation{from{opacity:0.99}to{opacity:1}}@keyframes chartjs-render-animation{from{opacity:0.99}to{opacity:1}}.chartjs-render-monitor{-webkit-animation:chartjs-render-animation 0.001s;animation:chartjs-render-animation 0.001s;}</style>
-    {% load static %}
 </head>
 <body data-new-gr-c-s-check-loaded="14.1062.0" data-gr-ext-installed="">
     <nav class="navbar navbar-dark fixed-top bg-dark flex-md-nowrap p-0 shadow">
@@ -58,71 +57,92 @@
                     </div>
                 </div>
                 
-                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                    <h1 class="h2">Wx Viewer</h1>
-                    <!-- D3 Visualization Container -->
-                    <div id="d3-container"></div>
-
+                <div class="d-flex flex-column">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">Wx Viewer</h1>
+                    </div>
+                    <div class="d-flex">
+                        <div>
+                            <label for="variable-select">Select a Variable:</label>
+                            <select id="variable-select">
+                                {% for variable in variables %}
+                                    <option value="{{ variable }}">{{ variable }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div id="time-slider-container">
+                            <label for="time-slider">Time:</label>
+                            <input type="range" id="time-slider" min="0" max="100" value="0" step="1">
+                            <span id="slider-value">0</span>
+                        </div>
+                    </div>
+                    <!-- Container for D3 Visualization and Level Slider -->
+                    <div class="d-flex">
+                        <!-- Level Slider Container -->
+                        <div id="level-slider-container">
+                            <label for="level-slider">Level:</label>
+                            <input type="range" id="level-slider" min="0" max="10" value="0" step="1">
+                            <span id="level-value">0</span>
+                        </div>
+                        <!-- D3 Visualization Container -->
+                        <div id="d3-container" style="width: 800px; height: 800px; border: 1px solid rgba(36, 35, 35, 0.500);"></div>
+                    </div>
+                    <!-- Spacer -->
+                    <div style="height: 20px;"></div>
+                    <!-- Data Section -->
+                    <div class="netCDF_detail">
+                        <h4>Data</h4>
+                        <!-- Table content here -->
+                    </div>
                 </div>
-                <div>
-                    <label for="variable-select">Select a Variable:</label>
-                    <select id="variable-select">
-                        {% for variable in variables %}
-                            <option value="{{ variable }}">{{ variable }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <canvas class="my-4 w-100 chartjs-render-monitor" id="myChart" width="1037" height="437" style="display: block; width: 1037px; height: 437px;"></canvas>
-
-                <h4>Data</h4>
-                <div class="netCDF_detail">
-                    <!-- Table content here -->
-                </div>
+                
+                
             </main>
         </div>
     </div>
 
     <!-- Local script references -->
-    <script src="{% static 'js/jquery-3.3.1.min.js' %}"></script>
-    <script src="{% static 'js/feather.min.js' %}"></script>
-    <script src="{% static 'js/Chart.min.js' %}"></script>
-    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+
+    
+    
+    <script src="{% static 'js/libs/jquery-3.3.1.min.js' %}"></script>
+    <script src="{% static 'js/libs/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'js/libs/Chart.min.js' %}"></script>
+    <script src="{% static 'js/libs/topojson.min.js' %}"></script>
+    <script src="{% static 'js/libs/d3.v7.min.js' %}"></script>
+    <script src="{% static 'js/libs/feather.min.js' %}"></script>
 
     <script>
+        var colorScale; // Define colorScale variable in a broader scope
+        
         function fetchNetCDFDetails(filename) {
             fetch(`/data/${filename}/`)
-            .then(response => response.text())  // Continue getting the response as text
-            .then(html => {
-                // Update the .netCDF_detail element's innerHTML with the response
-                const detailsContainer = document.querySelector('.netCDF_detail');
-                detailsContainer.innerHTML = html;
+                .then(response => response.text())
+                .then(html => {
+                    const detailsContainer = document.querySelector('.netCDF_detail');
+                    detailsContainer.innerHTML = html;
     
-                // Extract variable names from the updated .netCDF_detail content
-                const variableNames = extractVariableNames(detailsContainer);
+                    // Set the currently selected filename
+                    document.querySelector('#selected-filename').setAttribute('data-filename', filename);
     
-                // Update the variables dropdown with the extracted variable names
-                updateVariableDropdown(variableNames);
-            })
-            .catch(error => {
-                console.error('Error fetching netCDF details:', error);
-                document.querySelector('.netCDF_detail').innerHTML = '<p>An error occurred while fetching file details.</p>';
-            });
+                    const variableNames = extractVariableNames(detailsContainer);
+                    updateVariableDropdown(variableNames);
+                })
+                .catch(error => {
+                    console.error('Error fetching netCDF details:', error);
+                    document.querySelector('.netCDF_detail').innerHTML = '<p>An error occurred while fetching file details.</p>';
+                });
         }
     
         function extractVariableNames(container) {
-            // Select all <h6> elements within the container, which contain variable names
             const variableElements = container.querySelectorAll('h6');
-            // Convert NodeList to Array and map to get textContent, then filter out the "Variables" heading and empty names
             const variableNames = Array.from(variableElements).map(elem => elem.textContent.trim()).filter(name => name !== 'Variables' && name !== 'Attributes');
-    
             return variableNames;
         }
     
         function updateVariableDropdown(variables) {
             const variableSelect = document.getElementById('variable-select');
-            variableSelect.innerHTML = '';  // Clear existing options
-    
-            // Populate dropdown with new options
+            variableSelect.innerHTML = '';
             variables.forEach(variable => {
                 const option = document.createElement('option');
                 option.value = variable;
@@ -130,18 +150,92 @@
                 variableSelect.appendChild(option);
             });
         }
-    </script>
     
-    
-
-    <script>
-        // JavaScript to handle variable selection changes
         document.getElementById('variable-select').addEventListener('change', function() {
             var selectedVariable = this.value;
-            console.log('Selected variable:', selectedVariable);
-            // You can extend this script to fetch and display data
-            // based on the selected variable.
+            // Use the data-filename attribute of the <h5> tag to get the selected file
+            var selectedFile = document.getElementById('selected-filename').getAttribute('data-filename');
+    
+            console.log('Selected variable:', selectedVariable, 'from file:', selectedFile);
+    
+            fetch(`/wx_viewer/variable_data/${selectedFile}/${selectedVariable}/`)
+                .then(response => response.json())
+                // After fetching the data
+                .then(data => {
+                    // Find the min and max values
+                    const values = data.map(d => d.value);
+                    const minValue = d3.min(values);
+                    const maxValue = d3.max(values);
+    
+                    // Define color scale based on min and max values
+                    colorScale = d3.scaleSequential(d3.interpolateViridis)
+                        .domain([minValue, maxValue]);
+    
+                    // Now add the data points
+                    addDataPoints(data); // Plot the data points on the map
+                })
+                .catch(error => console.error('Error fetching variable data:', error));
         });
+    
+        document.getElementById('time-slider').addEventListener('input', function() {
+            document.getElementById('slider-value').textContent = this.value;
+            // Placeholder for function to update visualization based on selected time
+        });
+    
+        document.getElementById('level-slider').addEventListener('input', function() {
+            document.getElementById('level-value').textContent = this.value;
+            // Placeholder for function to update visualization based on selected level
+        });
+    
+        // Projection and path generator
+        var projection = d3.geoMercator().scale(200).translate([300, 200]);
+        var pathGenerator = d3.geoPath().projection(projection);
+    
+        // Define zoom behavior
+        var zoom = d3.zoom()
+            .scaleExtent([1, 150])
+            .on('zoom', zoomed);
+    
+        // Create SVG element and apply zoom behavior
+        var svg = d3.select('#d3-container').append('svg')
+            .attr('width', 800)
+            .attr('height', 800)
+            .call(zoom);
+    
+        // Create a group element for zoomable elements
+        var g = svg.append("g");
+    
+        // Load and draw the base map
+        d3.json("{% static 'topo/ne_10m_coastline.topojson' %}").then(topojsonData => {
+            const geojsonData = topojson.feature(topojsonData, topojsonData.objects.ne10m_coastline);
+            g.selectAll('path')
+            .data(geojsonData.features)
+            .enter().append('path')
+            .attr('d', pathGenerator)
+            .attr('fill', '#ccc');
+        });
+    
+        function addDataPoints(data) {
+            // Clear previous data points
+            g.selectAll('circle').remove();
+    
+            // Add new data points as circles
+            g.selectAll('circle')
+                .data(data)
+                .enter().append('circle')
+                .attr('cx', d => projection([d.longitude, d.latitude])[0])
+                .attr('cy', d => projection([d.longitude, d.latitude])[1])
+                .attr('r', 0.1) // Radius of the circle, you can adjust this as needed
+                .attr('fill', d => colorScale(d.value)) // Apply color based on the value
+                .attr('opacity', 0.9); // some transparency to see overlaps
+            // Log the data for debugging
+            console.log(data);
+        }
+    
+        // Zoom event handler
+        function zoomed(event) {
+            g.attr('transform', event.transform);
+        }
     </script>
     
 </body>
