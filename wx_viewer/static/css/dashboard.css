@@ -55,6 +55,7 @@ main {
     top: 660px; /* Adjust this to position the slider below the "Select a Variable" dropdown */
     left: -35px; /* Align with the left edge of the D3 container */
     width: 700px; 
+    height: 10px;
     transform: rotate(-90deg);
     transform-origin: top left; /* Rotate the slider to be vertical */
 }
@@ -70,14 +71,21 @@ main {
     white-space: nowrap; /* Ensure the label and value are on the same line */
 }
 
-#level-value {
-    /* Add any specific styles you need for the level value here */
-}
-
 #d3-container {
     width: 1000px; 
-    height: 800px; 
-    border: 1px solid #353538;
+    height: 820px; 
+    border: 1px solid #3535383d;
     margin: 0px;
     padding: 50px;
+}
+
+/* CSS for Min and Max Value Container */
+#min-max-values-container {
+    display: flex;
+}
+
+/* CSS for input fields */
+.value-input {
+    width: 100px; /* Adjust the width as needed */
+    margin-right: 10px; /* Add space between inputs */
 }

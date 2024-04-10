@@ -143,3 +143,77 @@ def variable_data_view(request, filename, variable):
 
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
+    
+def max_min_data_time_values(request, filename, variable):
+    try:
+        # Thresholds for each variable
+        variable_thresholds = {
+            'speed': {'max': 24, 'min': 0},  # thresholds for wind speed in m/s
+            'tempc': {'max': 50, 'min': -10},  # thresholds for temperature in Celsius
+            'relhum': {'max': 100, 'min': 0},  # thresholds for relative humidity in percentage
+            'depth': {'max': 10, 'min': 0},  # thresholds for depth in meters
+            'press': {'max': 1200, 'min': 900},  # thresholds for pressure in hPa
+            'sst': {'max': 35, 'min': 0},  # thresholds for sea surface temperature in Celsius
+            'tempc': {'max': 50, 'min': -10},  # thresholds for temperature
+            'tempc2m': {'max': 50, 'min': -10},  # thresholds for temperature at 2m
+            'topoft': {'max': 600000, 'min': 0},  # thresholds for geopotential height in feet
+            # Add more variable types and their thresholds as needed
+        }
+
+        # Check if the variable is in the thresholds dictionary
+        if variable not in variable_thresholds:
+            return JsonResponse({'error': 'Variable not found'}, status=400)
+
+        # Construct the full filepath
+        data_dir = os.path.join(settings.BASE_DIR, 'data')  # Assuming netCDF files are in 'data' directory
+        filepath = os.path.join(data_dir, filename)
+
+        # Open the netCDF file
+        dataset = netCDF4.Dataset(filepath)
+
+        # Extracting time values
+        time_values = dataset.variables['time'][:]
+
+        # Convert time values to datetime objects
+        time_units = dataset.variables['time'].units
+        times = netCDF4.num2date(time_values, units=time_units)
+
+        # Convert datetime objects to strings
+        times_str = [time.strftime('%Y-%m-%d %H:%M:%S') for time in times]
+
+        # Find max and min times
+        max_time = max(times_str)
+        min_time = min(times_str)
+
+        # Extracting variable data
+        if variable in dataset.variables:
+            var_data = dataset.variables[variable][:]  # Accessing variable data
+            max_value = np.max(var_data).item()  # Find maximum value
+            min_value = np.min(var_data).item()  # Find minimum value
+            
+            # Apply thresholds
+            max_threshold = variable_thresholds[variable]['max']
+            min_threshold = variable_thresholds[variable]['min']
+            max_value = min(max_value, max_threshold)
+            min_value = max(min_value, min_threshold)
+        else:
+            max_value = None
+            min_value = None
+
+        # Close the dataset
+        dataset.close()
+
+        # Construct the JSON response
+        response_data = {
+            'max_time': max_time,
+            'min_time': min_time,
+            'max_value': max_value,
+            'min_value': min_value
+        }
+
+        # Return the JSON response
+        return JsonResponse(response_data)
+    except Exception as e:
+        # In case of an error, return an error message
+        error_message = str(e)
+        return JsonResponse({'error': error_message}, status=500)
