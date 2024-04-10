@@ -89,3 +89,19 @@ main {
     width: 100px; /* Adjust the width as needed */
     margin-right: 10px; /* Add space between inputs */
 }
+
+/* CSS for tooltip */
+.tooltip {
+    position: absolute;
+    text-align: center;
+    width: auto;
+    padding: 6px;
+    font: 12px sans-serif;
+    background: white;
+    border: 0px;
+    border-radius: 3px;
+    pointer-events: none;
+    opacity: 0; /* Hidden by default */
+    transition: opacity 0.05s; /* Smooth transition for showing and hiding */
+    z-index: 1000; /* Ensure tooltip is above other elements */
+}
