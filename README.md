@@ -1,6 +1,5 @@
-# WxBrowser
-
-## Wx Viewer Dashboard Setup Guide
+# WxViewer
+## Setup Guide
 
 Welcome to the Wx Viewer Dashboard! This guide will walk you through setting up and running the Wx Viewer Dashboard on your system.
 
