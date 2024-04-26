@@ -105,3 +105,16 @@ main {
     transition: opacity 0.05s; /* Smooth transition for showing and hiding */
     z-index: 1000; /* Ensure tooltip is above other elements */
 }
+
+/* CSS for red dot */
+.tooltip::before {
+    content: '';
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background-color: rgb(175, 17, 17);
+    border-radius: 50%;
+    bottom: -10px; /* Adjust position from the bottom */
+    left: -10px; /* Adjust position from the left */
+    z-index: -1; /* Ensure dot is behind the tooltip */
+}
